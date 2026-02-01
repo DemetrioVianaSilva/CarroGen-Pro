@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarroGen Pro V2.1.1 - Editor Profissional com Drag & Drop</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Bebas+Neue&family=Playfair+Display:wght@400;700;900&family=Poppins:wght@400;600;700;800&family=Montserrat:wght@400;600;700;800;900&family=Oswald:wght@400;500;600;700&family=Raleway:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #15151f;
+            --bg-hover: #1f1f2e;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-light: #818cf8;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --border: #27273a;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        #root {
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .header {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 320px 1fr 400px;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            min-height: calc(100vh - 120px);
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .canvas-area {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .preview-area {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .canvas {
+            position: relative;
+            aspect-ratio: 1080 / 1350;
+            background: #fff;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .canvas-background {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .text-element {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            padding: 1rem;
+            min-width: 100px;
+            min-height: 50px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .text-element.selected {
+            outline: 2px dashed var(--accent);
+            outline-offset: 4px;
+        }
+
+        .text-element:hover {
+            outline: 2px dashed rgba(99, 102, 241, 0.5);
+            outline-offset: 4px;
+        }
+
+        .resize-handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: nwse-resize;
+            bottom: -6px;
+            right: -6px;
+            display: none;
+        }
+
+        .text-element.selected .resize-handle {
+            display: block;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .template-card {
+            aspect-ratio: 1080 / 1350;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .template-card:hover {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 1.5rem;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bg-hover);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+        }
+
+        .color-picker-wrapper {
+            display: grid;
+            grid-template-columns: 60px 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .color-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 0.5rem;
+            border: 2px solid var(--border);
+            cursor: pointer;
+        }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 0.5rem;
+            padding-right: 0.5rem;
+            border-right: 1px solid var(--border);
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-primary);
+        }
+
+        .icon-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .export-canvas {
+            position: fixed;
+            left: -9999px;
+            top: -9999px;
+        }
+
+        @media (max-width: 1400px) {
+            .editor-container {
+                grid-template-columns: 280px 1fr 350px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar, .preview-area {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, createContext, useContext } = React;
+
+        // CONFIGURAÇÃO DO SUPABASE
+        const SUPABASE_URL = 'https://kafvrzagsahfrvycynwt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthZnZyemFnc2FoZnJ2eWN5bnd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NjgxOTgsImV4cCI6MjA4NTQ0NDE5OH0.yj2gb-IJ8jMu7PO5lbAeLrG6uekq3lJUh3LsBPgB-qo';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const AuthContext = createContext();
+
+        const AuthProvider = ({ children }) => {
+            const [user, setUser] = useState(null);
+            const [profile, setProfile] = useState(null);
+            const [loading, setLoading] = useState(true);
+
+            useEffect(() => {
+                supabase.auth.getSession().then(({ data: { session } }) => {
+                    setUser(session?.user ?? null);
+                    if (session?.user) {
+                        loadProfile(session.user.id);
+                    } else {
+                        setLoading(false);
+                    }
+                });
+
+                const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+                    setUser(session?.user ?? null);
+                    if (session?.user) {
+                        loadProfile(session.user.id);
+                    } else {
+                        setProfile(null);
+                        setLoading(false);
+                    }
+                });
+
+                return () => subscription.unsubscribe();
+            }, []);
+
+            const loadProfile = async (userId) => {
+                try {
+                    const { data, error } = await supabase
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('id', userId)
+                        .single();
+
+                    if (error) throw error;
+                    setProfile(data);
+                } catch (error) {
+                    console.error('Error loading profile:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const signIn = async (email, password) => {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                return { data, error };
+            };
+
+            const signUp = async (email, password, instagramHandle) => {
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                if (!error && data.user) {
+                    await supabase.from('user_profiles').insert({
+                        id: data.user.id,
+                        role: 'admin',
+                        instagram_handle: instagramHandle,
+                    });
+                }
+                return { data, error };
+            };
+
+            const signOut = async () => {
+                await supabase.auth.signOut();
+            };
+
+            return (
+                <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut }}>
+                    {children}
+                </AuthContext.Provider>
+            );
+        };
+
+        const useAuth = () => useContext(AuthContext);
+
+        const TEMPLATES = [
+            {
+                id: 'minimal',
+                name: 'Minimalista',
+                textElements: [{
+                    text: 'Título Principal',
+                    x: 50, y: 50, width: 80,
+                    fontSize: 72, fontFamily: 'Bebas Neue',
+                    color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.7)',
+                    textAlign: 'center', fontWeight: '700',
+                }]
+            },
+            {
+                id: 'elegant',
+                name: 'Elegante',
+                textElements: [{
+                    text: 'Título Elegante',
+                    x: 10, y: 20, width: 80,
+                    fontSize: 64, fontFamily: 'Playfair Display',
+                    color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.5)',
+                    textAlign: 'left', fontWeight: '700',
+                }]
+            },
+            {
+                id: 'bold',
+                name: 'Impactante',
+                textElements: [{
+                    text: 'DESTAQUE',
+                    x: 50, y: 40, width: 90,
+                    fontSize: 96, fontFamily: 'Oswald',
+                    color: '#ffff00', backgroundColor: 'rgba(0,0,0,0.8)',
+                    textAlign: 'center', fontWeight: '800',
+                    textShadow: '4px 4px 8px rgba(0,0,0,0.8)',
+                }]
+            },
+            {
+                id: 'modern',
+                name: 'Moderno',
+                textElements: [{
+                    text: 'Texto Moderno',
+                    x: 15, y: 70, width: 70,
+                    fontSize: 56, fontFamily: 'Montserrat',
+                    color: '#ffffff', backgroundColor: 'rgba(99,102,241,0.9)',
+                    textAlign: 'left', fontWeight: '600',
+                    borderRadius: '12px',
+                }]
+            },
+        ];
+
+        const LoginPage = () => {
+            const [isLogin, setIsLogin] = useState(true);
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [instagramHandle, setInstagramHandle] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState('');
+            const { signIn, signUp } = useAuth();
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setError('');
+                setLoading(true);
+
+                try {
+                    if (isLogin) {
+                        const { error } = await signIn(email, password);
+                        if (error) throw error;
+                    } else {
+                        const { error } = await signUp(email, password, instagramHandle);
+                        if (error) throw error;
+                    }
+                } catch (error) {
+                    setError(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+                    <div className="card" style={{ maxWidth: '450px', width: '100%' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <div className="logo" style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>
+                                CARROGEN PRO V2.1.1
+                            </div>
+                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                                Editor Profissional com Drag & Drop
+                            </p>
+                        </div>
+
+                        {error && (
+                            <div className="alert alert-error">
+                                ⚠️ {error}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleSubmit}>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label className="label">Email</label>
+                                <input
+                                    type="email"
+                                    className="input"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label className="label">Senha</label>
+                                <input
+                                    type="password"
+                                    className="input"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            {!isLogin && (
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label className="label">Instagram (opcional)</label>
+                                    <input
+                                        type="text"
+                                        className="input"
+                                        value={instagramHandle}
+                                        onChange={(e) => setInstagramHandle(e.target.value)}
+                                    />
+                                </div>
+                            )}
+
+                            <button 
+                                type="submit" 
+                                className="btn btn-primary" 
+                                style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}
+                                disabled={loading}
+                            >
+                                {loading ? <span className="loading"></span> : (isLogin ? 'Entrar' : 'Criar Conta')}
+                            </button>
+                        </form>
+
+                        <div style={{ textAlign: 'center', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+                            <button
+                                className="btn btn-secondary"
+                                style={{ width: '100%', justifyContent: 'center' }}
+                                onClick={() => setIsLogin(!isLogin)}
+                            >
+                                {isLogin ? 'Criar nova conta' : 'Já tenho conta'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const EditorV2 = () => {
+            const [project, setProject] = useState({ name: 'Novo Projeto', slidesCount: 5 });
+            const [slides, setSlides] = useState([]);
+            const [currentSlide, setCurrentSlide] = useState(0);
+            const [selectedElement, setSelectedElement] = useState(null);
+            const [dragging, setDragging] = useState(false);
+            const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+            const canvasRef = useRef(null);
+
+            useEffect(() => {
+                if (slides.length === 0) {
+                    initializeSlides(project.slidesCount);
+                }
+            }, []);
+
+            useEffect(() => {
+                const currentCount = slides.length;
+                const newCount = project.slidesCount;
+                
+                if (newCount > currentCount) {
+                    const additionalSlides = Array.from({ length: newCount - currentCount }, (_, i) => ({
+                        id: currentCount + i,
+                        backgroundImage: null,
+                        textElements: [{
+                            id: Date.now() + currentCount + i,
+                            text: `Slide ${currentCount + i + 1}`,
+                            x: 50, y: 50, width: 70,
+                            fontSize: 48, fontFamily: 'Outfit',
+                            color: '#ffffff', backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            textAlign: 'center', fontWeight: '700',
+                            padding: 20, borderRadius: '12px',
+                        }],
+                    }));
+                    setSlides([...slides, ...additionalSlides]);
+                } else if (newCount < currentCount) {
+                    setSlides(slides.slice(0, newCount));
+                    if (currentSlide >= newCount) {
+                        setCurrentSlide(newCount - 1);
+                    }
+                }
+            }, [project.slidesCount]);
+
+            const initializeSlides = (count) => {
+                const newSlides = Array.from({ length: count }, (_, i) => ({
+                    id: i,
+                    backgroundImage: null,
+                    textElements: [{
+                        id: Date.now() + i,
+                        text: `Slide ${i + 1}`,
+                        x: 50, y: 50, width: 70,
+                        fontSize: 48, fontFamily: 'Outfit',
+                        color: '#ffffff', backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        textAlign: 'center', fontWeight: '700',
+                        padding: 20, borderRadius: '12px',
+                    }],
+                }));
+                setSlides(newSlides);
+            };
+
+            const handleBackgroundUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const newSlides = [...slides];
+                        newSlides[currentSlide].backgroundImage = event.target.result;
+                        setSlides(newSlides);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const addTextElement = () => {
+                const newElement = {
+                    id: Date.now(),
+                    text: 'Novo Texto',
+                    x: 30, y: 30, width: 50,
+                    fontSize: 36, fontFamily: 'Outfit',
+                    color: '#ffffff', backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                    textAlign: 'center', fontWeight: '600',
+                    padding: 16, borderRadius: '8px',
+                };
+
+                const newSlides = [...slides];
+                newSlides[currentSlide].textElements.push(newElement);
+                setSlides(newSlides);
+                setSelectedElement(newElement.id);
+            };
+
+            const updateTextElement = (elementId, updates) => {
+                const newSlides = [...slides];
+                const element = newSlides[currentSlide].textElements.find(el => el.id === elementId);
+                if (element) {
+                    Object.assign(element, updates);
+                    setSlides(newSlides);
+                }
+            };
+
+            const deleteTextElement = (elementId) => {
+                const newSlides = [...slides];
+                newSlides[currentSlide].textElements = newSlides[currentSlide].textElements.filter(
+                    el => el.id !== elementId
+                );
+                setSlides(newSlides);
+                setSelectedElement(null);
+            };
+
+            const handleMouseDown = (e, elementId) => {
+                if (e.target.classList.contains('resize-handle')) return;
+                
+                e.preventDefault();
+                e.stopPropagation();
+                setSelectedElement(elementId);
+                setDragging(true);
+
+                const canvas = canvasRef.current;
+                const rect = canvas.getBoundingClientRect();
+                const element = slides[currentSlide].textElements.find(el => el.id === elementId);
+
+                const offsetX = ((e.clientX - rect.left) / rect.width * 100) - element.x;
+                const offsetY = ((e.clientY - rect.top) / rect.height * 100) - element.y;
+
+                setDragOffset({ x: offsetX, y: offsetY });
+            };
+
+            const handleMouseMove = (e) => {
+                if (!dragging || !selectedElement) return;
+
+                const canvas = canvasRef.current;
+                const rect = canvas.getBoundingClientRect();
+
+                const x = ((e.clientX - rect.left) / rect.width * 100) - dragOffset.x;
+                const y = ((e.clientY - rect.top) / rect.height * 100) - dragOffset.y;
+
+                const clampedX = Math.max(0, Math.min(100, x));
+                const clampedY = Math.max(0, Math.min(100, y));
+
+                updateTextElement(selectedElement, { x: clampedX, y: clampedY });
+            };
+
+            const handleMouseUp = () => {
+                setDragging(false);
+            };
+
+            useEffect(() => {
+                if (dragging) {
+                    window.addEventListener('mousemove', handleMouseMove);
+                    window.addEventListener('mouseup', handleMouseUp);
+                    return () => {
+                        window.removeEventListener('mousemove', handleMouseMove);
+                        window.removeEventListener('mouseup', handleMouseUp);
+                    };
+                }
+            }, [dragging, selectedElement, dragOffset]);
+
+            const applyTemplate = (template) => {
+                const newSlides = [...slides];
+                newSlides[currentSlide].textElements = JSON.parse(JSON.stringify(template.textElements)).map(el => ({
+                    ...el,
+                    id: Date.now() + Math.random(),
+                    padding: el.padding || 20,
+                    borderRadius: el.borderRadius || '12px',
+                }));
+                setSlides(newSlides);
+            };
+
+            const exportSlides = async () => {
+                const zip = new JSZip();
+                
+                for (let i = 0; i < slides.length; i++) {
+                    const exportDiv = document.createElement('div');
+                    exportDiv.className = 'export-canvas';
+                    exportDiv.style.width = '1080px';
+                    exportDiv.style.height = '1350px';
+                    exportDiv.style.position = 'relative';
+                    exportDiv.style.background = slides[i].backgroundImage ? 
+                        `url(${slides[i].backgroundImage}) center/cover` : '#f3f4f6';
+                    
+                    slides[i].textElements.forEach(element => {
+                        const textDiv = document.createElement('div');
+                        textDiv.textContent = element.text;
+                        textDiv.style.position = 'absolute';
+                        textDiv.style.left = `${element.x}%`;
+                        textDiv.style.top = `${element.y}%`;
+                        textDiv.style.width = `${element.width}%`;
+                        textDiv.style.fontSize = `${element.fontSize}px`;
+                        textDiv.style.fontFamily = element.fontFamily;
+                        textDiv.style.color = element.color;
+                        textDiv.style.backgroundColor = element.backgroundColor;
+                        textDiv.style.textAlign = element.textAlign;
+                        textDiv.style.fontWeight = element.fontWeight;
+                        textDiv.style.padding = `${element.padding}px`;
+                        textDiv.style.borderRadius = element.borderRadius || '12px';
+                        textDiv.style.textShadow = element.textShadow || '2px 2px 4px rgba(0,0,0,0.5)';
+                        textDiv.style.wordWrap = 'break-word';
+                        textDiv.style.whiteSpace = 'pre-wrap';
+                        exportDiv.appendChild(textDiv);
+                    });
+
+                    document.body.appendChild(exportDiv);
+
+                    const canvas = await html2canvas(exportDiv, {
+                        width: 1080,
+                        height: 1350,
+                        scale: 3,
+                        backgroundColor: '#ffffff',
+                    });
+
+                    document.body.removeChild(exportDiv);
+
+                    const dataUrl = canvas.toDataURL('image/png', 1.0);
+                    const base64Data = dataUrl.split(',')[1];
+                    zip.file(`slide-${i + 1}.png`, base64Data, { base64: true });
+                }
+
+                const content = await zip.generateAsync({ type: 'blob' });
+                saveAs(content, `${project.name || 'carrossel'}.zip`);
+            };
+
+            const getCurrentElement = () => {
+                if (!selectedElement) return null;
+                return slides[currentSlide]?.textElements.find(el => el.id === selectedElement);
+            };
+
+            const currentElement = getCurrentElement();
+
+            return (
+                <div className="editor-container">
+                    <div className="sidebar">
+                        <div className="card" style={{ marginBottom: '1rem' }}>
+                            <h3 style={{ marginBottom: '1rem' }}>📐 Projeto</h3>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label className="label">Nome</label>
+                                <input
+                                    type="text"
+                                    className="input"
+                                    value={project.name}
+                                    onChange={(e) => setProject({...project, name: e.target.value})}
+                                />
+                            </div>
+                            <div>
+                                <label className="label">Slides: {project.slidesCount}</label>
+                                <input
+                                    type="range"
+                                    className="slider"
+                                    min="1"
+                                    max="10"
+                                    value={project.slidesCount}
+                                    onChange={(e) => setProject({...project, slidesCount: parseInt(e.target.value)})}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="card">
+                            <h3 style={{ marginBottom: '1rem' }}>🎨 Templates</h3>
+                            <div className="template-grid">
+                                {TEMPLATES.map(template => (
+                                    <div
+                                        key={template.id}
+                                        className="template-card"
+                                        onClick={() => applyTemplate(template)}
+                                        style={{ 
+                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: 'white',
+                                            fontWeight: '600',
+                                            fontSize: '0.85rem',
+                                        }}
+                                    >
+                                        {template.name}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="canvas-area">
+                        <div className="toolbar">
+                            <div className="toolbar-group">
+                                <button className="icon-btn" onClick={addTextElement} title="Adicionar Texto">
+                                    ➕ T
+                                </button>
+                                <label className="icon-btn" title="Imagem de Fundo">
+                                    🖼️
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleBackgroundUpload}
+                                        style={{ display: 'none' }}
+                                    />
+                                </label>
+                            </div>
+                            <div className="toolbar-group">
+                                {currentElement && (
+                                    <button 
+                                        className="icon-btn" 
+                                        onClick={() => deleteTextElement(selectedElement)}
+                                        title="Deletar"
+                                    >
+                                        🗑️
+                                    </button>
+                                )}
+                            </div>
+                            <div className="toolbar-group">
+                                <button className="btn btn-primary" onClick={exportSlides}>
+                                    📥 Exportar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', padding: '0.5rem' }}>
+                            {slides.map((slide, index) => (
+                                <button
+                                    key={slide.id}
+                                    onClick={() => setCurrentSlide(index)}
+                                    className={`btn ${currentSlide === index ? 'btn-primary' : 'btn-secondary'}`}
+                                    style={{ minWidth: '100px' }}
+                                >
+                                    Slide {index + 1}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div 
+                            ref={canvasRef}
+                            className="canvas"
+                            style={{
+                                backgroundImage: slides[currentSlide]?.backgroundImage ? 
+                                    `url(${slides[currentSlide].backgroundImage})` : 'none',
+                                backgroundColor: slides[currentSlide]?.backgroundImage ? 'transparent' : '#f3f4f6',
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                            }}
+                            onClick={(e) => {
+                                if (e.target === e.currentTarget) {
+                                    setSelectedElement(null);
+                                }
+                            }}
+                        >
+                            {slides[currentSlide]?.textElements.map((element) => (
+                                <div
+                                    key={element.id}
+                                    className={`text-element ${selectedElement === element.id ? 'selected' : ''}`}
+                                    onMouseDown={(e) => handleMouseDown(e, element.id)}
+                                    style={{
+                                        left: `${element.x}%`,
+                                        top: `${element.y}%`,
+                                        width: `${element.width}%`,
+                                        fontSize: `${element.fontSize}px`,
+                                        fontFamily: element.fontFamily,
+                                        color: element.color,
+                                        backgroundColor: element.backgroundColor,
+                                        textAlign: element.textAlign,
+                                        fontWeight: element.fontWeight,
+                                        padding: `${element.padding}px`,
+                                        borderRadius: element.borderRadius,
+                                        textShadow: element.textShadow || '2px 2px 4px rgba(0,0,0,0.5)',
+                                        cursor: dragging ? 'grabbing' : 'move',
+                                    }}
+                                >
+                                    {element.text}
+                                    {selectedElement === element.id && (
+                                        <div className="resize-handle"></div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="preview-area">
+                        {currentElement ? (
+                            <div className="card">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                    <h3>⚙️ Propriedades</h3>
+                                    <button
+                                        className="btn btn-secondary"
+                                        style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                                        onClick={() => setSelectedElement(null)}
+                                    >
+                                        ✕ Desselecionar
+                                    </button>
+                                </div>
+                                
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label className="label">Texto</label>
+                                    <textarea
+                                        className="input"
+                                        value={currentElement.text}
+                                        onChange={(e) => updateTextElement(currentElement.id, { text: e.target.value })}
+                                        rows="3"
+                                    />
+                                </div>
+
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label className="label">Fonte</label>
+                                    <select
+                                        className="input"
+                                        value={currentElement.fontFamily}
+                                        onChange={(e) => updateTextElement(currentElement.id, { fontFamily: e.target.value })}
+                                    >
+                                        <option value="Outfit">Outfit</option>
+                                        <option value="Bebas Neue">Bebas Neue</option>
+                                        <option value="Playfair Display">Playfair Display</option>
+                                        <option value="Poppins">Poppins</option>
+                                        <option value="Montserrat">Montserrat</option>
+                                        <option value="Oswald">Oswald</option>
+                                        <option value="Raleway">Raleway</option>
+                                    </select>
+                                </div>
+
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label className="label">Tamanho: {currentElement.fontSize}px</label>
+                                    <input
+                                        type="range"
+                                        className="slider"
+                                        min="12"
+                                        max="120"
+                                        value={currentElement.fontSize}
+                                        onChange={(e) => updateTextElement(currentElement.id, { fontSize: parseInt(e.target.value) })}
+                                    />
+                                </div>
+
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label className="label">Cor do Texto</label>
+                                    <div className="color-picker-wrapper">
+                                        <div 
+                                            className="color-preview"
+                                            style={{ backgroundColor: currentElement.color }}
+                                        ></div>
+                                        <input
+                                            type="color"
+                                            className="input"
+                                            value={currentElement.color}
+                                            onChange={(e) => updateTextElement(currentElement.id, { color: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label className="label">Cor de Fundo</label>
+                                    <input
+                                        type="text"
+                                        className="input"
+                                        value={currentElement.backgroundColor}
+                                        onChange={(e) => updateTextElement(currentElement.id, { backgroundColor: e.target.value })}
+                                        placeholder="rgba(0,0,0,0.7)"
+                                    />
+                                </div>
+
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label className="label">Alinhamento</label>
+                                    <select
+                                        className="input"
+                                        value={currentElement.textAlign}
+                                        onChange={(e) => updateTextElement(currentElement.id, { textAlign: e.target.value })}
+                                    >
+                                        <option value="left">Esquerda</option>
+                                        <option value="center">Centro</option>
+                                        <option value="right">Direita</option>
+                                    </select>
+                                </div>
+
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label className="label">Peso da Fonte</label>
+                                    <select
+                                        className="input"
+                                        value={currentElement.fontWeight}
+                                        onChange={(e) => updateTextElement(currentElement.id, { fontWeight: e.target.value })}
+                                    >
+                                        <option value="400">Normal</option>
+                                        <option value="600">Semi-Bold</option>
+                                        <option value="700">Bold</option>
+                                        <option value="800">Extra-Bold</option>
+                                        <option value="900">Black</option>
+                                    </select>
+                                </div>
+
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label className="label">Padding: {currentElement.padding}px</label>
+                                    <input
+                                        type="range"
+                                        className="slider"
+                                        min="0"
+                                        max="50"
+                                        value={currentElement.padding}
+                                        onChange={(e) => updateTextElement(currentElement.id, { padding: parseInt(e.target.value) })}
+                                    />
+                                </div>
+
+                                <button
+                                    className="btn btn-danger"
+                                    style={{ width: '100%', justifyContent: 'center' }}
+                                    onClick={() => deleteTextElement(currentElement.id)}
+                                >
+                                    🗑️ Deletar Elemento
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="card">
+                                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                                    <p style={{ fontSize: '3rem', marginBottom: '1rem' }}>👆</p>
+                                    <p style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                                        Selecione um elemento
+                                    </p>
+                                    <p style={{ fontSize: '0.9rem' }}>
+                                        Clique em um texto no canvas para editar
+                                    </p>
+                                    <p style={{ fontSize: '0.9rem', marginTop: '1rem' }}>
+                                        💡 <strong>Dica:</strong> Arraste os textos para reposicionar!
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const { user, profile, loading, signOut } = useAuth();
+
+            if (loading) {
+                return (
+                    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <div className="loading" style={{ width: '40px', height: '40px' }}></div>
+                            <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>Carregando...</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (!user) {
+                return <LoginPage />;
+            }
+
+            return (
+                <>
+                    <header className="header">
+                        <div className="container">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div className="logo">CARROGEN PRO V2.1.1</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    {profile?.instagram_handle && (
+                                        <span style={{ color: 'var(--text-secondary)' }}>
+                                            {profile.instagram_handle}
+                                        </span>
+                                    )}
+                                    <button className="btn btn-secondary" onClick={signOut}>
+                                        Sair
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    <main style={{ padding: '2rem 0' }}>
+                        <div className="container">
+                            <EditorV2 />
+                        </div>
+                    </main>
+                </>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(
+            <AuthProvider>
+                <App />
+            </AuthProvider>
+        );
+    </script>
+</body>
+</html>
