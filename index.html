@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CarroGen Pro V2.1.1 - Editor Profissional com Drag & Drop</title>
+    <title>CarroGen Pro V2.2.0 - Editor Profissional Completo</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,7 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Bebas+Neue&family=Playfair+Display:wght@400;700;900&family=Poppins:wght@400;600;700;800&family=Montserrat:wght@400;600;700;800;900&family=Oswald:wght@400;500;600;700&family=Raleway:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Bebas+Neue&family=Playfair+Display:wght@400;700;900&family=Poppins:wght@400;600;700;800&family=Montserrat:wght@400;600;700;800;900&family=Oswald:wght@400;500;600;700&family=Raleway:wght@400;600;700;800&family=Roboto:wght@400;500;700;900&family=Open+Sans:wght@400;600;700;800&family=Lato:wght@400;700;900&family=Merriweather:wght@400;700;900&family=Nunito:wght@400;700;900&family=PT+Sans:wght@400;700&family=Ubuntu:wght@400;500;700&family=Crimson+Text:wght@400;700&family=Inter:wght@400;600;700;800;900&family=Dancing+Script:wght@400;700&family=Pacifico&family=Caveat:wght@400;700&family=Righteous&family=Shadows+Into+Light&family=Alfa+Slab+One&family=Anton&family=Permanent+Marker&family=Bangers&family=Lobster&family=Cinzel:wght@400;700;900&family=Great+Vibes&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -53,7 +53,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
+            background:
                 radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
                 radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
             pointer-events: none;
@@ -201,6 +201,8 @@
             position: sticky;
             top: 100px;
             height: fit-content;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
         }
 
         .canvas {
@@ -210,6 +212,7 @@
             border-radius: 1rem;
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            touch-action: none;
         }
 
         .canvas-background {
@@ -217,6 +220,17 @@
             inset: 0;
             background-size: cover;
             background-position: center;
+        }
+
+        .image-element {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+        }
+
+        .image-element.selected {
+            outline: 2px dashed var(--accent);
+            outline-offset: 4px;
         }
 
         .text-element {
@@ -228,6 +242,7 @@
             min-height: 50px;
             word-wrap: break-word;
             white-space: pre-wrap;
+            touch-action: none;
         }
 
         .text-element.selected {
@@ -235,31 +250,34 @@
             outline-offset: 4px;
         }
 
-        .text-element:hover {
+        .text-element:hover, .image-element:hover {
             outline: 2px dashed rgba(99, 102, 241, 0.5);
             outline-offset: 4px;
         }
 
         .resize-handle {
             position: absolute;
-            width: 12px;
-            height: 12px;
+            width: 16px;
+            height: 16px;
             background: var(--accent);
             border: 2px solid white;
             border-radius: 50%;
             cursor: nwse-resize;
-            bottom: -6px;
-            right: -6px;
+            bottom: -8px;
+            right: -8px;
             display: none;
+            z-index: 10;
         }
 
-        .text-element.selected .resize-handle {
+        .element.selected .resize-handle,
+        .text-element.selected .resize-handle,
+        .image-element.selected .resize-handle {
             display: block;
         }
 
         .template-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            display: flex;
+            flex-direction: column;
             gap: 1rem;
         }
 
@@ -367,14 +385,35 @@
             cursor: pointer;
         }
 
+        .gradient-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .gradient-option {
+            height: 50px;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .gradient-option:hover {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
         .alert {
             padding: 1rem 1.5rem;
             border-radius: 0.75rem;
             margin-bottom: 1rem;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 0.75rem;
             font-weight: 500;
+            line-height: 1.5;
         }
 
         .alert-success {
@@ -387,6 +426,12 @@
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.3);
             color: var(--danger);
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--warning);
         }
 
         .toolbar {
@@ -422,6 +467,7 @@
             cursor: pointer;
             transition: all 0.3s;
             color: var(--text-primary);
+            font-size: 1.1rem;
         }
 
         .icon-btn:hover {
@@ -429,10 +475,29 @@
             border-color: var(--accent);
         }
 
+        .icon-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
         .export-canvas {
             position: fixed;
             left: -9999px;
             top: -9999px;
+        }
+
+        .font-preview {
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .font-preview:hover {
+            border-color: var(--accent);
+            background: var(--bg-hover);
         }
 
         @media (max-width: 1400px) {
@@ -449,6 +514,37 @@
             .sidebar, .preview-area {
                 position: static;
             }
+
+            .canvas {
+                max-width: 100%;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .toolbar {
+                gap: 0.25rem;
+                padding: 0.75rem;
+            }
+
+            .icon-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+
+            .btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
         }
     </style>
 </head>
@@ -458,12 +554,15 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, createContext, useContext } = React;
 
-        // CONFIGURAÇÃO DO SUPABASE
         const SUPABASE_URL = 'https://kafvrzagsahfrvycynwt.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthZnZyemFnc2FoZnJ2eWN5bnd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4NjgxOTgsImV4cCI6MjA4NTQ0NDE5OH0.yj2gb-IJ8jMu7PO5lbAeLrG6uekq3lJUh3LsBPgB-qo';
-        
+
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // ==========================================
+        // AuthContext, AuthProvider e useAuth
+        // (Essas definicoes estavam faltando no V2.2.0)
+        // ==========================================
         const AuthContext = createContext();
 
         const AuthProvider = ({ children }) => {
@@ -541,13 +640,53 @@
 
         const useAuth = () => useContext(AuthContext);
 
+        // ==========================================
+        // Constantes V2.2.0
+        // ==========================================
+
+        const GRADIENTS = [
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+            'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+            'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+            'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+            'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)',
+            'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)',
+            'linear-gradient(135deg, #f7971e 0%, #ffd200 100%)',
+        ];
+
+        const TEMPLATE_COLORS = [
+            { bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', text: '#ffffff' },
+            { bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', text: '#ffffff' },
+            { bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', text: '#ffffff' },
+            { bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', text: '#000000' },
+            { bg: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', text: '#000000' },
+            { bg: '#000000', text: '#ffffff' },
+            { bg: '#ffffff', text: '#000000' },
+            { bg: 'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)', text: '#ffffff' },
+        ];
+
+        const FONTS = [
+            'Outfit', 'Bebas Neue', 'Playfair Display', 'Poppins', 'Montserrat',
+            'Oswald', 'Raleway', 'Roboto', 'Open Sans', 'Lato', 'Merriweather',
+            'Nunito', 'PT Sans', 'Ubuntu', 'Crimson Text', 'Inter',
+            'Dancing Script', 'Pacifico', 'Caveat', 'Righteous',
+            'Shadows Into Light', 'Alfa Slab One', 'Anton', 'Permanent Marker',
+            'Bangers', 'Lobster', 'Cinzel', 'Great Vibes'
+        ];
+
         const TEMPLATES = [
             {
                 id: 'minimal',
                 name: 'Minimalista',
+                colors: TEMPLATE_COLORS,
                 textElements: [{
                     text: 'Título Principal',
-                    x: 50, y: 50, width: 80,
+                    x: 50, y: 50, width: 80, height: 15,
                     fontSize: 72, fontFamily: 'Bebas Neue',
                     color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.7)',
                     textAlign: 'center', fontWeight: '700',
@@ -556,9 +695,10 @@
             {
                 id: 'elegant',
                 name: 'Elegante',
+                colors: TEMPLATE_COLORS,
                 textElements: [{
                     text: 'Título Elegante',
-                    x: 10, y: 20, width: 80,
+                    x: 10, y: 20, width: 80, height: 15,
                     fontSize: 64, fontFamily: 'Playfair Display',
                     color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.5)',
                     textAlign: 'left', fontWeight: '700',
@@ -567,9 +707,10 @@
             {
                 id: 'bold',
                 name: 'Impactante',
+                colors: TEMPLATE_COLORS,
                 textElements: [{
                     text: 'DESTAQUE',
-                    x: 50, y: 40, width: 90,
+                    x: 50, y: 40, width: 90, height: 20,
                     fontSize: 96, fontFamily: 'Oswald',
                     color: '#ffff00', backgroundColor: 'rgba(0,0,0,0.8)',
                     textAlign: 'center', fontWeight: '800',
@@ -579,9 +720,10 @@
             {
                 id: 'modern',
                 name: 'Moderno',
+                colors: TEMPLATE_COLORS,
                 textElements: [{
                     text: 'Texto Moderno',
-                    x: 15, y: 70, width: 70,
+                    x: 15, y: 70, width: 70, height: 15,
                     fontSize: 56, fontFamily: 'Montserrat',
                     color: '#ffffff', backgroundColor: 'rgba(99,102,241,0.9)',
                     textAlign: 'left', fontWeight: '600',
@@ -597,11 +739,13 @@
             const [instagramHandle, setInstagramHandle] = useState('');
             const [loading, setLoading] = useState(false);
             const [error, setError] = useState('');
+            const [success, setSuccess] = useState('');
             const { signIn, signUp } = useAuth();
 
             const handleSubmit = async (e) => {
                 e.preventDefault();
                 setError('');
+                setSuccess('');
                 setLoading(true);
 
                 try {
@@ -611,6 +755,7 @@
                     } else {
                         const { error } = await signUp(email, password, instagramHandle);
                         if (error) throw error;
+                        setSuccess('Cadastro realizado! Verifique seu email (inclusive a caixa de SPAM) para confirmar sua conta.');
                     }
                 } catch (error) {
                     setError(error.message);
@@ -624,16 +769,32 @@
                     <div className="card" style={{ maxWidth: '450px', width: '100%' }}>
                         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                             <div className="logo" style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>
-                                CARROGEN PRO V2.1.1
+                                CARROGEN PRO V2.2.0
                             </div>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-                                Editor Profissional com Drag & Drop
+                                Editor Profissional Completo
                             </p>
                         </div>
 
                         {error && (
                             <div className="alert alert-error">
-                                ⚠️ {error}
+                                <span>⚠️</span>
+                                <span>{error}</span>
+                            </div>
+                        )}
+
+                        {success && (
+                            <div className="alert alert-success">
+                                <span>✅</span>
+                                <div>
+                                    <strong>{success}</strong>
+                                    <p style={{ fontSize: '0.9rem', marginTop: '0.5rem', opacity: 0.9 }}>
+                                        📧 Enviamos um link de confirmação para <strong>{email}</strong>
+                                    </p>
+                                    <p style={{ fontSize: '0.85rem', marginTop: '0.5rem', opacity: 0.8 }}>
+                                        💡 <strong>Importante:</strong> Se não encontrar o email, verifique sua caixa de SPAM ou Lixo Eletrônico.
+                                    </p>
+                                </div>
                             </div>
                         )}
 
@@ -668,13 +829,14 @@
                                         className="input"
                                         value={instagramHandle}
                                         onChange={(e) => setInstagramHandle(e.target.value)}
+                                        placeholder="@seu_usuario"
                                     />
                                 </div>
                             )}
 
-                            <button 
-                                type="submit" 
-                                className="btn btn-primary" 
+                            <button
+                                type="submit"
+                                className="btn btn-primary"
                                 style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}
                                 disabled={loading}
                             >
@@ -686,7 +848,11 @@
                             <button
                                 className="btn btn-secondary"
                                 style={{ width: '100%', justifyContent: 'center' }}
-                                onClick={() => setIsLogin(!isLogin)}
+                                onClick={() => {
+                                    setIsLogin(!isLogin);
+                                    setError('');
+                                    setSuccess('');
+                                }}
                             >
                                 {isLogin ? 'Criar nova conta' : 'Já tenho conta'}
                             </button>
@@ -702,7 +868,9 @@
             const [currentSlide, setCurrentSlide] = useState(0);
             const [selectedElement, setSelectedElement] = useState(null);
             const [dragging, setDragging] = useState(false);
+            const [resizing, setResizing] = useState(false);
             const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+            const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
             const canvasRef = useRef(null);
 
             useEffect(() => {
@@ -714,19 +882,21 @@
             useEffect(() => {
                 const currentCount = slides.length;
                 const newCount = project.slidesCount;
-                
+
                 if (newCount > currentCount) {
                     const additionalSlides = Array.from({ length: newCount - currentCount }, (_, i) => ({
                         id: currentCount + i,
                         backgroundImage: null,
+                        images: [],
                         textElements: [{
                             id: Date.now() + currentCount + i,
                             text: `Slide ${currentCount + i + 1}`,
-                            x: 50, y: 50, width: 70,
+                            x: 50, y: 50, width: 70, height: 15,
                             fontSize: 48, fontFamily: 'Outfit',
                             color: '#ffffff', backgroundColor: 'rgba(0, 0, 0, 0.7)',
                             textAlign: 'center', fontWeight: '700',
                             padding: 20, borderRadius: '12px',
+                            zIndex: 1,
                         }],
                     }));
                     setSlides([...slides, ...additionalSlides]);
@@ -742,14 +912,16 @@
                 const newSlides = Array.from({ length: count }, (_, i) => ({
                     id: i,
                     backgroundImage: null,
+                    images: [],
                     textElements: [{
                         id: Date.now() + i,
                         text: `Slide ${i + 1}`,
-                        x: 50, y: 50, width: 70,
+                        x: 50, y: 50, width: 70, height: 15,
                         fontSize: 48, fontFamily: 'Outfit',
                         color: '#ffffff', backgroundColor: 'rgba(0, 0, 0, 0.7)',
                         textAlign: 'center', fontWeight: '700',
                         padding: 20, borderRadius: '12px',
+                        zIndex: 1,
                     }],
                 }));
                 setSlides(newSlides);
@@ -768,52 +940,153 @@
                 }
             };
 
+            const handleImageUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const aspectRatio = img.height / img.width;
+                            const newImage = {
+                                id: Date.now(),
+                                src: event.target.result,
+                                x: 25,
+                                y: 25,
+                                width: 50,
+                                height: 50 * aspectRatio,
+                                zIndex: (slides[currentSlide]?.images?.length || 0) + (slides[currentSlide]?.textElements?.length || 0) + 1,
+                            };
+                            const newSlides = [...slides];
+                            if (!newSlides[currentSlide].images) {
+                                newSlides[currentSlide].images = [];
+                            }
+                            newSlides[currentSlide].images.push(newImage);
+                            setSlides(newSlides);
+                            setSelectedElement({ type: 'image', id: newImage.id });
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+                e.target.value = '';
+            };
+
             const addTextElement = () => {
+                const maxZIndex = Math.max(
+                    ...slides[currentSlide].textElements.map(el => el.zIndex || 0),
+                    ...slides[currentSlide].images.map(img => img.zIndex || 0),
+                    0
+                );
+
                 const newElement = {
                     id: Date.now(),
                     text: 'Novo Texto',
-                    x: 30, y: 30, width: 50,
+                    x: 30, y: 30, width: 50, height: 15,
                     fontSize: 36, fontFamily: 'Outfit',
                     color: '#ffffff', backgroundColor: 'rgba(0, 0, 0, 0.7)',
                     textAlign: 'center', fontWeight: '600',
                     padding: 16, borderRadius: '8px',
+                    zIndex: maxZIndex + 1,
                 };
 
                 const newSlides = [...slides];
                 newSlides[currentSlide].textElements.push(newElement);
                 setSlides(newSlides);
-                setSelectedElement(newElement.id);
+                setSelectedElement({ type: 'text', id: newElement.id });
             };
 
-            const updateTextElement = (elementId, updates) => {
+            const updateElement = (type, elementId, updates) => {
                 const newSlides = [...slides];
-                const element = newSlides[currentSlide].textElements.find(el => el.id === elementId);
-                if (element) {
-                    Object.assign(element, updates);
-                    setSlides(newSlides);
+                if (type === 'text') {
+                    const element = newSlides[currentSlide].textElements.find(el => el.id === elementId);
+                    if (element) Object.assign(element, updates);
+                } else if (type === 'image') {
+                    const element = newSlides[currentSlide].images.find(el => el.id === elementId);
+                    if (element) Object.assign(element, updates);
                 }
+                setSlides(newSlides);
             };
 
-            const deleteTextElement = (elementId) => {
+            const deleteElement = (type, elementId) => {
                 const newSlides = [...slides];
-                newSlides[currentSlide].textElements = newSlides[currentSlide].textElements.filter(
-                    el => el.id !== elementId
-                );
+                if (type === 'text') {
+                    newSlides[currentSlide].textElements = newSlides[currentSlide].textElements.filter(
+                        el => el.id !== elementId
+                    );
+                } else if (type === 'image') {
+                    newSlides[currentSlide].images = newSlides[currentSlide].images.filter(
+                        el => el.id !== elementId
+                    );
+                }
                 setSlides(newSlides);
                 setSelectedElement(null);
             };
 
-            const handleMouseDown = (e, elementId) => {
-                if (e.target.classList.contains('resize-handle')) return;
-                
+            const changeZIndex = (type, elementId, direction) => {
+                const newSlides = [...slides];
+                const currentSlideData = newSlides[currentSlide];
+
+                currentSlideData.textElements.forEach((el, idx) => {
+                    if (el.zIndex === undefined) el.zIndex = idx;
+                });
+                currentSlideData.images.forEach((el, idx) => {
+                    if (el.zIndex === undefined) el.zIndex = idx + currentSlideData.textElements.length;
+                });
+
+                const allElements = [
+                    ...currentSlideData.textElements.map(el => ({ ...el, type: 'text' })),
+                    ...currentSlideData.images.map(el => ({ ...el, type: 'image' }))
+                ].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+
+                const elementIndex = allElements.findIndex(el => el.type === type && el.id === elementId);
+                if (elementIndex === -1) return;
+
+                if (direction === 'up' && elementIndex < allElements.length - 1) {
+                    const currentZ = allElements[elementIndex].zIndex;
+                    const nextZ = allElements[elementIndex + 1].zIndex;
+                    allElements[elementIndex].zIndex = nextZ;
+                    allElements[elementIndex + 1].zIndex = currentZ;
+                } else if (direction === 'down' && elementIndex > 0) {
+                    const currentZ = allElements[elementIndex].zIndex;
+                    const prevZ = allElements[elementIndex - 1].zIndex;
+                    allElements[elementIndex].zIndex = prevZ;
+                    allElements[elementIndex - 1].zIndex = currentZ;
+                }
+
+                allElements.forEach(el => {
+                    if (el.type === 'text') {
+                        const textEl = currentSlideData.textElements.find(t => t.id === el.id);
+                        if (textEl) textEl.zIndex = el.zIndex;
+                    } else {
+                        const imgEl = currentSlideData.images.find(i => i.id === el.id);
+                        if (imgEl) imgEl.zIndex = el.zIndex;
+                    }
+                });
+
+                setSlides(newSlides);
+            };
+
+            const handleMouseDown = (e, type, elementId) => {
+                if (e.target.classList.contains('resize-handle')) {
+                    handleResizeStart(e, type, elementId);
+                    return;
+                }
+
                 e.preventDefault();
                 e.stopPropagation();
-                setSelectedElement(elementId);
+                setSelectedElement({ type, id: elementId });
                 setDragging(true);
 
                 const canvas = canvasRef.current;
                 const rect = canvas.getBoundingClientRect();
-                const element = slides[currentSlide].textElements.find(el => el.id === elementId);
+
+                let element;
+                if (type === 'text') {
+                    element = slides[currentSlide].textElements.find(el => el.id === elementId);
+                } else {
+                    element = slides[currentSlide].images.find(el => el.id === elementId);
+                }
 
                 const offsetX = ((e.clientX - rect.left) / rect.width * 100) - element.x;
                 const offsetY = ((e.clientY - rect.top) / rect.height * 100) - element.y;
@@ -821,35 +1094,103 @@
                 setDragOffset({ x: offsetX, y: offsetY });
             };
 
-            const handleMouseMove = (e) => {
-                if (!dragging || !selectedElement) return;
+            const handleTouchStart = (e, type, elementId) => {
+                const touch = e.touches[0];
+                handleMouseDown({
+                    clientX: touch.clientX,
+                    clientY: touch.clientY,
+                    preventDefault: () => e.preventDefault(),
+                    stopPropagation: () => e.stopPropagation(),
+                    target: e.target
+                }, type, elementId);
+            };
+
+            const handleResizeStart = (e, type, elementId) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setResizing(true);
+                setSelectedElement({ type, id: elementId });
 
                 const canvas = canvasRef.current;
                 const rect = canvas.getBoundingClientRect();
 
-                const x = ((e.clientX - rect.left) / rect.width * 100) - dragOffset.x;
-                const y = ((e.clientY - rect.top) / rect.height * 100) - dragOffset.y;
+                let element;
+                if (type === 'text') {
+                    element = slides[currentSlide].textElements.find(el => el.id === elementId);
+                } else {
+                    element = slides[currentSlide].images.find(el => el.id === elementId);
+                }
 
-                const clampedX = Math.max(0, Math.min(100, x));
-                const clampedY = Math.max(0, Math.min(100, y));
+                setResizeStart({
+                    x: e.clientX,
+                    y: e.clientY,
+                    width: element.width,
+                    height: element.height || element.width,
+                    aspectRatio: type === 'image' ? (element.height / element.width) : null,
+                });
+            };
 
-                updateTextElement(selectedElement, { x: clampedX, y: clampedY });
+            const handleMouseMove = (e) => {
+                if (resizing && selectedElement) {
+                    const canvas = canvasRef.current;
+                    const rect = canvas.getBoundingClientRect();
+
+                    const deltaX = (e.clientX - resizeStart.x) / rect.width * 100;
+
+                    const newWidth = Math.max(10, resizeStart.width + deltaX);
+
+                    if (selectedElement.type === 'image' && resizeStart.aspectRatio) {
+                        const newHeight = newWidth * resizeStart.aspectRatio;
+                        updateElement(selectedElement.type, selectedElement.id, {
+                            width: newWidth,
+                            height: newHeight
+                        });
+                    } else {
+                        const deltaY = (e.clientY - resizeStart.y) / rect.height * 100;
+                        const newHeight = Math.max(10, resizeStart.height + deltaY);
+                        updateElement(selectedElement.type, selectedElement.id, {
+                            width: newWidth,
+                            height: newHeight
+                        });
+                    }
+                } else if (dragging && selectedElement) {
+                    const canvas = canvasRef.current;
+                    const rect = canvas.getBoundingClientRect();
+
+                    const x = ((e.clientX - rect.left) / rect.width * 100) - dragOffset.x;
+                    const y = ((e.clientY - rect.top) / rect.height * 100) - dragOffset.y;
+
+                    const clampedX = Math.max(0, Math.min(100, x));
+                    const clampedY = Math.max(0, Math.min(100, y));
+
+                    updateElement(selectedElement.type, selectedElement.id, { x: clampedX, y: clampedY });
+                }
+            };
+
+            const handleTouchMove = (e) => {
+                const touch = e.touches[0];
+                handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
             };
 
             const handleMouseUp = () => {
                 setDragging(false);
+                setResizing(false);
             };
 
             useEffect(() => {
-                if (dragging) {
+                if (dragging || resizing) {
                     window.addEventListener('mousemove', handleMouseMove);
                     window.addEventListener('mouseup', handleMouseUp);
+                    window.addEventListener('touchmove', handleTouchMove);
+                    window.addEventListener('touchend', handleMouseUp);
                     return () => {
                         window.removeEventListener('mousemove', handleMouseMove);
                         window.removeEventListener('mouseup', handleMouseUp);
+                        window.removeEventListener('touchmove', handleTouchMove);
+                        window.removeEventListener('touchend', handleMouseUp);
                     };
                 }
-            }, [dragging, selectedElement, dragOffset]);
+            }, [dragging, resizing, selectedElement, dragOffset, resizeStart]);
 
             const applyTemplate = (template) => {
                 const newSlides = [...slides];
@@ -858,50 +1199,71 @@
                     id: Date.now() + Math.random(),
                     padding: el.padding || 20,
                     borderRadius: el.borderRadius || '12px',
+                    zIndex: el.zIndex || 1,
                 }));
                 setSlides(newSlides);
             };
 
             const exportSlides = async () => {
                 const zip = new JSZip();
-                
+
                 for (let i = 0; i < slides.length; i++) {
                     const exportDiv = document.createElement('div');
                     exportDiv.className = 'export-canvas';
                     exportDiv.style.width = '1080px';
                     exportDiv.style.height = '1350px';
                     exportDiv.style.position = 'relative';
-                    exportDiv.style.background = slides[i].backgroundImage ? 
+                    exportDiv.style.background = slides[i].backgroundImage ?
                         `url(${slides[i].backgroundImage}) center/cover` : '#f3f4f6';
-                    
-                    slides[i].textElements.forEach(element => {
-                        const textDiv = document.createElement('div');
-                        textDiv.textContent = element.text;
-                        textDiv.style.position = 'absolute';
-                        textDiv.style.left = `${element.x}%`;
-                        textDiv.style.top = `${element.y}%`;
-                        textDiv.style.width = `${element.width}%`;
-                        textDiv.style.fontSize = `${element.fontSize}px`;
-                        textDiv.style.fontFamily = element.fontFamily;
-                        textDiv.style.color = element.color;
-                        textDiv.style.backgroundColor = element.backgroundColor;
-                        textDiv.style.textAlign = element.textAlign;
-                        textDiv.style.fontWeight = element.fontWeight;
-                        textDiv.style.padding = `${element.padding}px`;
-                        textDiv.style.borderRadius = element.borderRadius || '12px';
-                        textDiv.style.textShadow = element.textShadow || '2px 2px 4px rgba(0,0,0,0.5)';
-                        textDiv.style.wordWrap = 'break-word';
-                        textDiv.style.whiteSpace = 'pre-wrap';
-                        exportDiv.appendChild(textDiv);
+
+                    const allElements = [
+                        ...slides[i].images.map(el => ({ ...el, type: 'image' })),
+                        ...slides[i].textElements.map(el => ({ ...el, type: 'text' }))
+                    ].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+
+                    allElements.forEach(element => {
+                        if (element.type === 'image') {
+                            const img = document.createElement('img');
+                            img.src = element.src;
+                            img.style.position = 'absolute';
+                            img.style.left = `${element.x}%`;
+                            img.style.top = `${element.y}%`;
+                            img.style.width = `${element.width}%`;
+                            img.style.height = `${element.height}%`;
+                            img.style.objectFit = 'cover';
+                            exportDiv.appendChild(img);
+                        } else {
+                            const textDiv = document.createElement('div');
+                            textDiv.textContent = element.text;
+                            textDiv.style.position = 'absolute';
+                            textDiv.style.left = `${element.x}%`;
+                            textDiv.style.top = `${element.y}%`;
+                            textDiv.style.width = `${element.width}%`;
+                            textDiv.style.fontSize = `${element.fontSize}px`;
+                            textDiv.style.fontFamily = element.fontFamily;
+                            textDiv.style.color = element.color;
+                            textDiv.style.background = element.backgroundColor;
+                            textDiv.style.textAlign = element.textAlign;
+                            textDiv.style.fontWeight = element.fontWeight;
+                            textDiv.style.padding = `${element.padding}px`;
+                            textDiv.style.borderRadius = element.borderRadius || '12px';
+                            textDiv.style.textShadow = element.textShadow || '2px 2px 4px rgba(0,0,0,0.5)';
+                            textDiv.style.wordWrap = 'break-word';
+                            textDiv.style.whiteSpace = 'pre-wrap';
+                            exportDiv.appendChild(textDiv);
+                        }
                     });
 
                     document.body.appendChild(exportDiv);
+
+                    await new Promise(resolve => setTimeout(resolve, 100));
 
                     const canvas = await html2canvas(exportDiv, {
                         width: 1080,
                         height: 1350,
                         scale: 3,
                         backgroundColor: '#ffffff',
+                        useCORS: true,
                     });
 
                     document.body.removeChild(exportDiv);
@@ -917,7 +1279,11 @@
 
             const getCurrentElement = () => {
                 if (!selectedElement) return null;
-                return slides[currentSlide]?.textElements.find(el => el.id === selectedElement);
+                if (selectedElement.type === 'text') {
+                    return slides[currentSlide]?.textElements.find(el => el.id === selectedElement.id);
+                } else {
+                    return slides[currentSlide]?.images.find(el => el.id === selectedElement.id);
+                }
             };
 
             const currentElement = getCurrentElement();
@@ -953,21 +1319,51 @@
                             <h3 style={{ marginBottom: '1rem' }}>🎨 Templates</h3>
                             <div className="template-grid">
                                 {TEMPLATES.map(template => (
-                                    <div
-                                        key={template.id}
-                                        className="template-card"
-                                        onClick={() => applyTemplate(template)}
-                                        style={{ 
-                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: 'white',
-                                            fontWeight: '600',
-                                            fontSize: '0.85rem',
-                                        }}
-                                    >
-                                        {template.name}
+                                    <div key={template.id} style={{ marginBottom: '1rem' }}>
+                                        <div
+                                            className="template-card"
+                                            onClick={() => applyTemplate(template)}
+                                            style={{
+                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                color: 'white',
+                                                fontWeight: '600',
+                                                fontSize: '0.85rem',
+                                                marginBottom: '0.5rem',
+                                            }}
+                                        >
+                                            {template.name}
+                                        </div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.25rem' }}>
+                                            {template.colors.map((colorScheme, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    onClick={() => {
+                                                        const templateWithColor = {
+                                                            ...template,
+                                                            textElements: template.textElements.map(el => ({
+                                                                ...el,
+                                                                color: colorScheme.text,
+                                                                backgroundColor: colorScheme.bg
+                                                            }))
+                                                        };
+                                                        applyTemplate(templateWithColor);
+                                                    }}
+                                                    style={{
+                                                        height: '30px',
+                                                        background: colorScheme.bg,
+                                                        borderRadius: '0.25rem',
+                                                        cursor: 'pointer',
+                                                        border: '2px solid transparent',
+                                                        transition: 'all 0.3s',
+                                                    }}
+                                                    onMouseEnter={(e) => e.target.style.borderColor = 'var(--accent)'}
+                                                    onMouseLeave={(e) => e.target.style.borderColor = 'transparent'}
+                                                ></div>
+                                            ))}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -978,10 +1374,19 @@
                         <div className="toolbar">
                             <div className="toolbar-group">
                                 <button className="icon-btn" onClick={addTextElement} title="Adicionar Texto">
-                                    ➕ T
+                                    T
                                 </button>
-                                <label className="icon-btn" title="Imagem de Fundo">
+                                <label className="icon-btn" title="Adicionar Imagem">
                                     🖼️
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        style={{ display: 'none' }}
+                                    />
+                                </label>
+                                <label className="icon-btn" title="Fundo">
+                                    🎨
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -992,13 +1397,29 @@
                             </div>
                             <div className="toolbar-group">
                                 {currentElement && (
-                                    <button 
-                                        className="icon-btn" 
-                                        onClick={() => deleteTextElement(selectedElement)}
-                                        title="Deletar"
-                                    >
-                                        🗑️
-                                    </button>
+                                    <>
+                                        <button
+                                            className="icon-btn"
+                                            onClick={() => changeZIndex(selectedElement.type, selectedElement.id, 'up')}
+                                            title="Trazer Frente"
+                                        >
+                                            ⬆️
+                                        </button>
+                                        <button
+                                            className="icon-btn"
+                                            onClick={() => changeZIndex(selectedElement.type, selectedElement.id, 'down')}
+                                            title="Enviar Fundo"
+                                        >
+                                            ⬇️
+                                        </button>
+                                        <button
+                                            className="icon-btn"
+                                            onClick={() => deleteElement(selectedElement.type, selectedElement.id)}
+                                            title="Deletar"
+                                        >
+                                            🗑️
+                                        </button>
+                                    </>
                                 )}
                             </div>
                             <div className="toolbar-group">
@@ -1021,11 +1442,11 @@
                             ))}
                         </div>
 
-                        <div 
+                        <div
                             ref={canvasRef}
                             className="canvas"
                             style={{
-                                backgroundImage: slides[currentSlide]?.backgroundImage ? 
+                                backgroundImage: slides[currentSlide]?.backgroundImage ?
                                     `url(${slides[currentSlide].backgroundImage})` : 'none',
                                 backgroundColor: slides[currentSlide]?.backgroundImage ? 'transparent' : '#f3f4f6',
                                 backgroundSize: 'cover',
@@ -1037,33 +1458,74 @@
                                 }
                             }}
                         >
-                            {slides[currentSlide]?.textElements.map((element) => (
-                                <div
-                                    key={element.id}
-                                    className={`text-element ${selectedElement === element.id ? 'selected' : ''}`}
-                                    onMouseDown={(e) => handleMouseDown(e, element.id)}
-                                    style={{
-                                        left: `${element.x}%`,
-                                        top: `${element.y}%`,
-                                        width: `${element.width}%`,
-                                        fontSize: `${element.fontSize}px`,
-                                        fontFamily: element.fontFamily,
-                                        color: element.color,
-                                        backgroundColor: element.backgroundColor,
-                                        textAlign: element.textAlign,
-                                        fontWeight: element.fontWeight,
-                                        padding: `${element.padding}px`,
-                                        borderRadius: element.borderRadius,
-                                        textShadow: element.textShadow || '2px 2px 4px rgba(0,0,0,0.5)',
-                                        cursor: dragging ? 'grabbing' : 'move',
-                                    }}
-                                >
-                                    {element.text}
-                                    {selectedElement === element.id && (
-                                        <div className="resize-handle"></div>
-                                    )}
-                                </div>
-                            ))}
+                            {slides[currentSlide] && [
+                                ...slides[currentSlide].images.map(img => ({ ...img, type: 'image' })),
+                                ...slides[currentSlide].textElements.map(txt => ({ ...txt, type: 'text' }))
+                            ].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0)).map((element) => {
+                                if (element.type === 'image') {
+                                    return (
+                                        <div
+                                            key={element.id}
+                                            className={`image-element element ${selectedElement?.type === 'image' && selectedElement?.id === element.id ? 'selected' : ''}`}
+                                            onMouseDown={(e) => handleMouseDown(e, 'image', element.id)}
+                                            onTouchStart={(e) => handleTouchStart(e, 'image', element.id)}
+                                            style={{
+                                                left: `${element.x}%`,
+                                                top: `${element.y}%`,
+                                                width: `${element.width}%`,
+                                                height: `${element.height}%`,
+                                                cursor: dragging ? 'grabbing' : 'move',
+                                                zIndex: element.zIndex || 0,
+                                            }}
+                                        >
+                                            <img
+                                                src={element.src}
+                                                alt="Uploaded"
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'contain',
+                                                    pointerEvents: 'none'
+                                                }}
+                                            />
+                                            {selectedElement?.type === 'image' && selectedElement?.id === element.id && (
+                                                <div className="resize-handle"></div>
+                                            )}
+                                        </div>
+                                    );
+                                } else {
+                                    return (
+                                        <div
+                                            key={element.id}
+                                            className={`text-element element ${selectedElement?.type === 'text' && selectedElement?.id === element.id ? 'selected' : ''}`}
+                                            onMouseDown={(e) => handleMouseDown(e, 'text', element.id)}
+                                            onTouchStart={(e) => handleTouchStart(e, 'text', element.id)}
+                                            style={{
+                                                left: `${element.x}%`,
+                                                top: `${element.y}%`,
+                                                width: `${element.width}%`,
+                                                height: `${element.height}%`,
+                                                fontSize: `${element.fontSize}px`,
+                                                fontFamily: element.fontFamily,
+                                                color: element.color,
+                                                background: element.backgroundColor,
+                                                textAlign: element.textAlign,
+                                                fontWeight: element.fontWeight,
+                                                padding: `${element.padding}px`,
+                                                borderRadius: element.borderRadius,
+                                                textShadow: element.textShadow || '2px 2px 4px rgba(0,0,0,0.5)',
+                                                cursor: dragging ? 'grabbing' : 'move',
+                                                zIndex: element.zIndex || 0,
+                                            }}
+                                        >
+                                            {element.text}
+                                            {selectedElement?.type === 'text' && selectedElement?.id === element.id && (
+                                                <div className="resize-handle"></div>
+                                            )}
+                                        </div>
+                                    );
+                                }
+                            })}
                         </div>
                     </div>
 
@@ -1077,120 +1539,164 @@
                                         style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
                                         onClick={() => setSelectedElement(null)}
                                     >
-                                        ✕ Desselecionar
+                                        ✕
                                     </button>
                                 </div>
-                                
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label className="label">Texto</label>
-                                    <textarea
-                                        className="input"
-                                        value={currentElement.text}
-                                        onChange={(e) => updateTextElement(currentElement.id, { text: e.target.value })}
-                                        rows="3"
-                                    />
-                                </div>
 
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label className="label">Fonte</label>
-                                    <select
-                                        className="input"
-                                        value={currentElement.fontFamily}
-                                        onChange={(e) => updateTextElement(currentElement.id, { fontFamily: e.target.value })}
-                                    >
-                                        <option value="Outfit">Outfit</option>
-                                        <option value="Bebas Neue">Bebas Neue</option>
-                                        <option value="Playfair Display">Playfair Display</option>
-                                        <option value="Poppins">Poppins</option>
-                                        <option value="Montserrat">Montserrat</option>
-                                        <option value="Oswald">Oswald</option>
-                                        <option value="Raleway">Raleway</option>
-                                    </select>
-                                </div>
+                                {selectedElement.type === 'text' ? (
+                                    <>
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <label className="label">Texto</label>
+                                            <textarea
+                                                className="input"
+                                                value={currentElement.text}
+                                                onChange={(e) => updateElement('text', currentElement.id, { text: e.target.value })}
+                                                rows="3"
+                                            />
+                                        </div>
 
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label className="label">Tamanho: {currentElement.fontSize}px</label>
-                                    <input
-                                        type="range"
-                                        className="slider"
-                                        min="12"
-                                        max="120"
-                                        value={currentElement.fontSize}
-                                        onChange={(e) => updateTextElement(currentElement.id, { fontSize: parseInt(e.target.value) })}
-                                    />
-                                </div>
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <label className="label">Fonte</label>
+                                            <select
+                                                className="input"
+                                                value={currentElement.fontFamily}
+                                                onChange={(e) => updateElement('text', currentElement.id, { fontFamily: e.target.value })}
+                                            >
+                                                {FONTS.map(font => (
+                                                    <option key={font} value={font} style={{ fontFamily: font }}>
+                                                        {font}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
 
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label className="label">Cor do Texto</label>
-                                    <div className="color-picker-wrapper">
-                                        <div 
-                                            className="color-preview"
-                                            style={{ backgroundColor: currentElement.color }}
-                                        ></div>
-                                        <input
-                                            type="color"
-                                            className="input"
-                                            value={currentElement.color}
-                                            onChange={(e) => updateTextElement(currentElement.id, { color: e.target.value })}
-                                        />
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <label className="label">Tamanho: {currentElement.fontSize}px</label>
+                                            <input
+                                                type="range"
+                                                className="slider"
+                                                min="12"
+                                                max="120"
+                                                value={currentElement.fontSize}
+                                                onChange={(e) => updateElement('text', currentElement.id, { fontSize: parseInt(e.target.value) })}
+                                            />
+                                        </div>
+
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <label className="label">Cor do Texto</label>
+                                            <div className="color-picker-wrapper">
+                                                <div
+                                                    className="color-preview"
+                                                    style={{ backgroundColor: currentElement.color }}
+                                                ></div>
+                                                <input
+                                                    type="color"
+                                                    className="input"
+                                                    value={currentElement.color}
+                                                    onChange={(e) => updateElement('text', currentElement.id, { color: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <label className="label">Cor de Fundo</label>
+                                            <div style={{ marginBottom: '0.5rem' }}>
+                                                <button
+                                                    className="btn btn-secondary"
+                                                    style={{ width: '100%', justifyContent: 'center', fontSize: '0.85rem' }}
+                                                    onClick={() => updateElement('text', currentElement.id, { backgroundColor: 'transparent' })}
+                                                >
+                                                    🚫 Sem Fundo (Transparente)
+                                                </button>
+                                            </div>
+                                            <div className="color-picker-wrapper">
+                                                <div
+                                                    className="color-preview"
+                                                    style={{ background: currentElement.backgroundColor === 'transparent' ? 'linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc)' : currentElement.backgroundColor,
+                                                        backgroundSize: '20px 20px',
+                                                        backgroundPosition: '0 0, 10px 10px'
+                                                    }}
+                                                ></div>
+                                                <input
+                                                    type="color"
+                                                    className="input"
+                                                    value={currentElement.backgroundColor?.replace(/rgba?\((\d+),\s*(\d+),\s*(\d+).*\)/, (_, r, g, b) =>
+                                                        `#${parseInt(r).toString(16).padStart(2, '0')}${parseInt(g).toString(16).padStart(2, '0')}${parseInt(b).toString(16).padStart(2, '0')}`
+                                                    ) || '#000000'}
+                                                    onChange={(e) => updateElement('text', currentElement.id, { backgroundColor: e.target.value })}
+                                                />
+                                            </div>
+                                            <div style={{ marginTop: '0.5rem' }}>
+                                                <label className="label" style={{ fontSize: '0.85rem' }}>Gradientes:</label>
+                                                <div className="gradient-grid">
+                                                    {GRADIENTS.map((gradient, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="gradient-option"
+                                                            style={{ background: gradient }}
+                                                            onClick={() => updateElement('text', currentElement.id, { backgroundColor: gradient })}
+                                                        ></div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <label className="label">Alinhamento</label>
+                                            <select
+                                                className="input"
+                                                value={currentElement.textAlign}
+                                                onChange={(e) => updateElement('text', currentElement.id, { textAlign: e.target.value })}
+                                            >
+                                                <option value="left">Esquerda</option>
+                                                <option value="center">Centro</option>
+                                                <option value="right">Direita</option>
+                                            </select>
+                                        </div>
+
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <label className="label">Peso da Fonte</label>
+                                            <select
+                                                className="input"
+                                                value={currentElement.fontWeight}
+                                                onChange={(e) => updateElement('text', currentElement.id, { fontWeight: e.target.value })}
+                                            >
+                                                <option value="400">Normal</option>
+                                                <option value="600">Semi-Bold</option>
+                                                <option value="700">Bold</option>
+                                                <option value="800">Extra-Bold</option>
+                                                <option value="900">Black</option>
+                                            </select>
+                                        </div>
+
+                                        <div style={{ marginBottom: '1rem' }}>
+                                            <label className="label">Padding: {currentElement.padding}px</label>
+                                            <input
+                                                type="range"
+                                                className="slider"
+                                                min="0"
+                                                max="50"
+                                                value={currentElement.padding}
+                                                onChange={(e) => updateElement('text', currentElement.id, { padding: parseInt(e.target.value) })}
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                                        <p style={{ fontSize: '2rem', marginBottom: '1rem' }}>🖼️</p>
+                                        <p style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                                            Imagem Selecionada
+                                        </p>
+                                        <p style={{ fontSize: '0.9rem' }}>
+                                            Redimensione arrastando a bolinha azul
+                                        </p>
                                     </div>
-                                </div>
-
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label className="label">Cor de Fundo</label>
-                                    <input
-                                        type="text"
-                                        className="input"
-                                        value={currentElement.backgroundColor}
-                                        onChange={(e) => updateTextElement(currentElement.id, { backgroundColor: e.target.value })}
-                                        placeholder="rgba(0,0,0,0.7)"
-                                    />
-                                </div>
-
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label className="label">Alinhamento</label>
-                                    <select
-                                        className="input"
-                                        value={currentElement.textAlign}
-                                        onChange={(e) => updateTextElement(currentElement.id, { textAlign: e.target.value })}
-                                    >
-                                        <option value="left">Esquerda</option>
-                                        <option value="center">Centro</option>
-                                        <option value="right">Direita</option>
-                                    </select>
-                                </div>
-
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label className="label">Peso da Fonte</label>
-                                    <select
-                                        className="input"
-                                        value={currentElement.fontWeight}
-                                        onChange={(e) => updateTextElement(currentElement.id, { fontWeight: e.target.value })}
-                                    >
-                                        <option value="400">Normal</option>
-                                        <option value="600">Semi-Bold</option>
-                                        <option value="700">Bold</option>
-                                        <option value="800">Extra-Bold</option>
-                                        <option value="900">Black</option>
-                                    </select>
-                                </div>
-
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label className="label">Padding: {currentElement.padding}px</label>
-                                    <input
-                                        type="range"
-                                        className="slider"
-                                        min="0"
-                                        max="50"
-                                        value={currentElement.padding}
-                                        onChange={(e) => updateTextElement(currentElement.id, { padding: parseInt(e.target.value) })}
-                                    />
-                                </div>
+                                )}
 
                                 <button
                                     className="btn btn-danger"
-                                    style={{ width: '100%', justifyContent: 'center' }}
-                                    onClick={() => deleteTextElement(currentElement.id)}
+                                    style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}
+                                    onClick={() => deleteElement(selectedElement.type, selectedElement.id)}
                                 >
                                     🗑️ Deletar Elemento
                                 </button>
@@ -1202,12 +1708,18 @@
                                     <p style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
                                         Selecione um elemento
                                     </p>
-                                    <p style={{ fontSize: '0.9rem' }}>
-                                        Clique em um texto no canvas para editar
+                                    <p style={{ fontSize: '0.9rem', marginBottom: '1rem' }}>
+                                        Clique em um texto ou imagem no canvas
                                     </p>
-                                    <p style={{ fontSize: '0.9rem', marginTop: '1rem' }}>
-                                        💡 <strong>Dica:</strong> Arraste os textos para reposicionar!
-                                    </p>
+                                    <div style={{ background: 'var(--bg-hover)', padding: '1rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
+                                        <p style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>💡 <strong>Dicas:</strong></p>
+                                        <ul style={{ textAlign: 'left', fontSize: '0.85rem', paddingLeft: '1.5rem' }}>
+                                            <li>Arraste elementos para reposicionar</li>
+                                            <li>Arraste a bolinha azul para redimensionar</li>
+                                            <li>Use ⬆️⬇️ para controlar camadas</li>
+                                            <li>Funciona no celular também!</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -1239,7 +1751,7 @@
                     <header className="header">
                         <div className="container">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div className="logo">CARROGEN PRO V2.1.1</div>
+                                <div className="logo">CARROGEN PRO V2.2.0</div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                     {profile?.instagram_handle && (
                                         <span style={{ color: 'var(--text-secondary)' }}>
